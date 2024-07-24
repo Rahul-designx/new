@@ -1,0 +1,129 @@
+let department = [];
+let plannedData = [];
+let actualData = [];
+let otherFieldsData = [];
+
+// Initialize totals for other fields
+let totalFields = Array(12).fill(0); // Since we have 12 other fields (w3 to w14)
+
+// Extract the data for each field
+data.series.forEach((s) => {
+  const nameField = s.fields.find((f) => f.name === 'Dt');
+  const plannedField = s.fields.find((f) => f.name === 'w1');
+  const actualField = s.fields.find((f) => f.name === 'w2');
+  const otherFields = [];
+  for (let i = 3; i <= 14; i++) {
+    otherFields.push(s.fields.find((f) => f.name === `w${i}`));
+  }
+
+  if (nameField && nameField.values.buffer) {
+    department.push(...nameField.values.buffer);
+  }
+  if (plannedField && plannedField.values.buffer) {
+    plannedData.push(...plannedField.values.buffer);
+  }
+  if (actualField && actualField.values.buffer) {
+    actualData.push(...actualField.values.buffer);
+  }
+  otherFields.forEach((field, index) => {
+    if (field && field.values.buffer) {
+      otherFieldsData[index] = (otherFieldsData[index] || []).concat(field.values.buffer);
+      totalFields[index] += field.values.buffer.reduce((a, b) => a + b, 0);
+    }
+  });
+});
+
+console.log(department); // Debugging statement
+
+const totalPlanned = plannedData.reduce((a, b) => a + b, 0);
+const totalActual = actualData.reduce((a, b) => a + b, 0);
+const total = totalPlanned + totalActual + totalFields.reduce((a, b) => a + b, 0); // Total value of the pie chart
+
+return {
+  title: {
+    text: 'Hazardous Waste Bifurcation (MT)',
+    left: 'center',
+    top: '0%', // Adjusted top to avoid overlapping with legend
+    textStyle: {
+      color: 'black',
+      fontWeight: 'bolder', // Extra bold
+      fontSize: 20, // Increased font size
+      fontStyle: 'italic', // Italicized text
+      textDecoration: 'underline' // Underline
+    }
+  },
+  series: [
+    {
+      name: 'Waste',
+      type: 'pie',
+      roseType: 'area', // Makes the pie chart 3D
+      top: '5%',
+      radius: ['35%', '60%'],
+      center: ['50%', '40%'], // Adjust center to make room for the legend
+      data: [
+        { value: totalPlanned, name: 'Plastic Waste', itemStyle: { color: '#219C90' } },
+        { value: totalActual, name: 'Thermocol Waste', itemStyle: { color: '#9DDE8B' } },
+        { value: totalFields[0], name: 'E-waste', itemStyle: { color: '#7ED7C1' } },
+        { value: totalFields[1], name: 'Bio-medical Waste', itemStyle: { color: '#254336' } },
+        { value: totalFields[2], name: 'Battery Waste', itemStyle: { color: '#57A6A1' } },
+        { value: totalFields[3], name: 'Radioactive Waste', itemStyle: { color: '#059212' } },
+        { value: totalFields[4], name: 'Garbage', itemStyle: { color: '#0A6847' } },
+        { value: totalFields[5], name: 'Phosphate Sludge', itemStyle: { color: '#41B06E' } },
+        { value: totalFields[6], name: 'Paint Sludge', itemStyle: { color: '#141E46' } },
+        { value: totalFields[7], name: 'Waste Oil / Grease', itemStyle: { color: '#87A922' } },
+        { value: totalFields[8], name: 'Copper, Brass, Al. Scrap etc / IRON', itemStyle: { color: '#114232' } },
+        { value: totalFields[9], name: 'Iron & Plastic Drums Paint / Oil / Chemical', itemStyle: { color: '#016A70' } },
+        { value: totalFields[10], name: 'PU Waste, RHL Waste, ISO, Poly', itemStyle: { color: '#004225' } },
+        { value: totalFields[11], name: 'Others', itemStyle: { color: '#435334' } }
+      ],
+      label: {
+        show: true,
+        position: 'outside',
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: 'black',
+        formatter: (params) => {
+          // Calculate percentage dynamically
+          const percent = ((params.value / total) * 100).toFixed(2);
+          return `${params.name}: ${percent}%`;
+        }
+      }
+    }
+  ],
+  legend: {
+    orient: 'horizontal',
+    bottom: '0%',
+    data: [
+      'Plastic Waste',
+      'Thermocol Waste',
+      'E-waste',
+      'Bio-medical Waste',
+      'Battery Waste',
+      'Radioactive Waste',
+      'Garbage',
+      'Phosphate Sludge',
+      'Paint Sludge',
+      'Waste Oil / Grease',
+      'Copper, Brass, Al. Scrap etc / IRON',
+      'Iron & Plastic Drums Paint / Oil / Chemical',
+      'PU Waste, RHL Waste, ISO, Poly',
+      'Others'
+    ],
+    textStyle: {
+      color: 'black',
+      fontSize: '10',
+      fontWeight: 'bold'
+    }
+  },
+  tooltip: {
+    show: true,
+    trigger: 'item', // Tooltip is triggered by item
+    formatter: (params) => {
+      // Show value and percentage with 2 decimal places
+      const value = params.value.toFixed(2);
+      const percent = ((params.value / total) * 100).toFixed(2);
+      return `${params.seriesName} <br/>${params.name}: ${value} (${percent}%)`;
+    }
+  }
+};
+
